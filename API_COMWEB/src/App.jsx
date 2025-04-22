@@ -1,35 +1,62 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useState } from 'react';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [role, setRole] = useState(null); // null | "eleve" | "prof"
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+  const handleChooseRole = (choix) => {
+    setRole(choix);
+  };
+
+  const handleRetour = () => {
+    setRole(null);
+  };
+
+  if (!role) {
+    // Page d’accueil
+    return (
+      <div style={{ textAlign: 'center', paddingTop: '50px' }}>
+        <h1>Se connecter</h1>
+        <button onClick={() => handleChooseRole('eleve')} style={btnStyle}>Élève</button>
+        <button onClick={() => handleChooseRole('prof')} style={btnStyle}>Professeur</button>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
+    );
+  }
+
+  if (role === 'eleve') {
+    return (
+      <div style={{ padding: '20px' }}>
+        <h2>Espace Élève</h2>
+        <p>Bienvenue sur votre interface.</p>
+        <ul>
+          <li>Maths : 14</li>
+          <li>Physique : 16</li>
+        </ul>
+        <button onClick={handleRetour}>Retour</button>
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    );
+  }
+
+  if (role === 'prof') {
+    return (
+      <div style={{ padding: '20px' }}>
+        <h2>Espace Professeur</h2>
+        <p>Bienvenue sur votre interface.</p>
+        <ul>
+          <li>Alice - Maths : 14</li>
+          <li>Bob - Physique : 15</li>
+        </ul>
+        <button onClick={handleRetour}>Retour</button>
+      </div>
+    );
+  }
 }
 
-export default App
+const btnStyle = {
+  margin: '10px',
+  padding: '10px 20px',
+  fontSize: '16px',
+  cursor: 'pointer'
+};
+
+export default App;
+
