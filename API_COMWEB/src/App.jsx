@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
-
-
+import React, { useState, useEffect } from 'react';
 
 function App() {
-  const [role, setRole] = useState(null); // null | "eleve" | "prof"
+  const [role, setRole] = useState(null);
+  const [notes, setNotes] = useState([]);
 
   const handleChooseRole = (choix) => {
     setRole(choix);
@@ -11,10 +10,19 @@ function App() {
 
   const handleRetour = () => {
     setRole(null);
+    setNotes([]);
   };
 
+  useEffect(() => {
+    if (role === 'prof') {
+      fetch('http://localhost/projet_y/get_notes.php')
+        .then(res => res.json())
+        .then(data => setNotes(data))
+        .catch(err => console.error("Erreur de récupération :", err));
+    }
+  }, [role]);
+
   if (!role) {
-    // Page d’accueil
     return (
       <div style={{ textAlign: 'center', paddingTop: '50px' }}>
         <h1>Se connecter</h1>
@@ -44,8 +52,11 @@ function App() {
         <h2>Espace Professeur</h2>
         <p>Bienvenue sur votre interface.</p>
         <ul>
-          <li>Alice - Maths : 14</li>
-          <li>Bob - Physique : 15</li>
+          {notes.map((note, index) => (
+            <li key={index}>
+              {note.eleve} - {note.matiere} : {note.note}
+            </li>
+          ))}
         </ul>
         <button onClick={handleRetour}>Retour</button>
       </div>
@@ -61,4 +72,3 @@ const btnStyle = {
 };
 
 export default App;
-
