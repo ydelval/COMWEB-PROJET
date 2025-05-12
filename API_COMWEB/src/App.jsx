@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 function App() {
-  const [role, setRole] = useState(null); // null | "eleve" | "prof"
+  const [role, setRole] = useState(null); 
   const [username, setUsername] = useState(""); // Déclaration de l'état pour le nom d'utilisateur
   const [password, setPassword] = useState(""); // Déclaration de l'état pour le mot de passe
 
@@ -10,16 +10,16 @@ function App() {
   };
 
   const handleConnexion = async () => {
-    // Envoie une requête pour vérifier le login et mot de passe
+    // Vérifier le login et mot de passe
     const response = await fetch("http://localhost/api/projet.php", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        username: username, // Assure-toi que cette variable est bien utilisée
+        username: username,
         password: password,
-        role: role, // On envoie aussi le rôle ici si nécessaire
+        role: role,
       }),
     });
 
@@ -58,7 +58,7 @@ function App() {
         type="text"
         placeholder="Identifiant"
         value={username}
-        onChange={(e) => setUsername(e.target.value)} // ici, on met à jour username
+        onChange={(e) => setUsername(e.target.value)}
         style={{ padding: '10px', marginBottom: '10px', width: '200px' }}
       />
       <br />
@@ -66,7 +66,7 @@ function App() {
         type="password"
         placeholder="Mot de passe"
         value={password}
-        onChange={(e) => setPassword(e.target.value)} // ici, on met à jour password
+        onChange={(e) => setPassword(e.target.value)}
         style={{ padding: '10px', marginBottom: '10px', width: '200px' }}
       />
       <br />
