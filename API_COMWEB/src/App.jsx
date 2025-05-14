@@ -1,36 +1,40 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 function App() {
   const [role, setRole] = useState(null); 
-  const [username, setUsername] = useState(""); // Déclaration de l'état pour le nom d'utilisateur
-  const [password, setPassword] = useState(""); // Déclaration de l'état pour le mot de passe
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [notes, setNotes] = useState([]); // Ajouté pour éviter une erreur si on appelle setNotes
 
   const handleChooseRole = (choix) => {
     setRole(choix);
   };
 
   const handleConnexion = async () => {
-    // Vérifier le login et mot de passe
-    const response = await fetch("http://localhost/api/projet.php", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        username: username,
-        password: password,
-        role: role,
-      }),
-    });
+    try {
+      const response = await fetch("http://localhost/api/projet.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: username,
+          password: password,
+          role: role,
+        }),
+      });
 
-    const data = await response.json();
+      const data = await response.json();
 
-    // Traitement de la réponse pour afficher un message ou rediriger
-    if (data.success) {
-      alert(`${role} connecté avec succès !`);
-      // rediriger l'utilisateur ou changer de page ici
-    } else {
-      alert("Identifiants incorrects !");
+      if (data.success) {
+        alert(`${role} connecté avec succès !`);
+        // Redirection ou action supplémentaire ici
+      } else {
+        alert("Identifiants incorrects !");
+      }
+    } catch (error) {
+      console.error("Erreur de connexion :", error);
+      alert("Erreur lors de la tentative de connexion.");
     }
   };
 
@@ -40,8 +44,23 @@ function App() {
     setPassword("");
   };
 
+  useEffect(() => {
+    if (role === 'prof') {
+      fetch('http://localhost/projet_y/get_notes.php')
+        .then(res => res.json())
+        .then(data => setNotes(data))
+        .catch(err => console.error("Erreur de récupération des notes :", err));
+    }
+  }, [role]);
+
+  const btnStyle = {
+    margin: '10px',
+    padding: '10px 20px',
+    fontSize: '16px',
+    cursor: 'pointer',
+  };
+
   if (!role) {
-    // Page d’accueil pour choisir le rôle
     return (
       <div style={{ textAlign: 'center', paddingTop: '50px' }}>
         <h1>Se connecter</h1>
@@ -72,16 +91,9 @@ function App() {
       <br />
       <button onClick={handleConnexion} style={btnStyle}>Se connecter</button>
       <br />
-      <button onClick={handleRetour}>Retour</button>
+      <button onClick={handleRetour} style={{ ...btnStyle, backgroundColor: "#eee" }}>Retour</button>
     </div>
   );
 }
-
-const btnStyle = {
-  margin: '10px',
-  padding: '10px 20px',
-  fontSize: '16px',
-  cursor: 'pointer',
-};
 
 export default App;
