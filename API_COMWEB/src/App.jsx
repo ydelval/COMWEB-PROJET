@@ -1,59 +1,69 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 function App() {
-  const [role, setRole] = useState(null); 
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [notes, setNotes] = useState([]); // Ajouté pour éviter une erreur si on appelle setNotes
+  const [notes, setNotes] = useState([]);
+  const [role, setRole] = useState(null); // rôle sélectionné dans l'UI
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleChooseRole = (choix) => {
-    setRole(choix);
+  const fetchNotes = () => {
+    fetch('http://localhost/projet_y/get_notes.php')
+      .then(res => res.json())
+      .then(data => setNotes(data))
+      .catch(err => console.error("Erreur de récupération des notes :", err));
   };
 
-  const handleConnexion = async () => {
-    try {
-      const response = await fetch("http://localhost/api/projet.php", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username: username,
-          password: password,
-          role: role,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        alert(`${role} connecté avec succès !`);
-        // Redirection ou action supplémentaire ici
-      } else {
-        alert("Identifiants incorrects !");
-      }
-    } catch (error) {
-      console.error("Erreur de connexion :", error);
-      alert("Erreur lors de la tentative de connexion.");
-    }
-  };
-
-  const handleRetour = () => {
-    setRole(null);
-    setUsername("");
-    setPassword("");
-    setIsLoggedIn(false);
-  };
-
-  useEffect(() => {
-    if (role === 'prof') {
-      fetch('http://localhost/projet_y/get_notes.php')
+  const handleLogin = () => {
+    if (username && password) {
+      fetch('http://localhost/projet_y/login.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, mot_de_passe: password })
+      })
         .then(res => res.json())
-        .then(data => setNotes(data))
-        .catch(err => console.error("Erreur de récupération des notes :", err));
+        .then(data => {
+          if (data.statut === "ok") {
+            const utilisateur = data.eleve;
+
+            if (utilisateur.role !== role) {
+              setError("Vous n'avez pas sélectionné le bon rôle.");
+              return;
+            }
+
+            setRole(utilisateur.role);
+            setLoggedIn(true);
+            setUsername('');
+            setPassword('');
+            setError('');
+
+            if (utilisateur.role === 'eleve') {
+              setNotes(data.notes);
+            } else {
+              fetchNotes();
+            }
+          } else {
+            setError(data.message);
+          }
+        })
+        .catch(err => {
+          setError("Erreur lors de la connexion.");
+          console.error("Erreur de connexion : ", err);
+        });
+    } else {
+      setError("Identifiant ou mot de passe incorrect.");
     }
-  }, [role, isLoggedIn]);
+  };
+
+  const handleLogout = () => {
+    setLoggedIn(false);
+    setRole(null);
+    setNotes([]);
+    setUsername('');
+    setPassword('');
+    setError('');
+  };
 
   const btnStyle = {
     margin: '10px',
@@ -62,28 +72,21 @@ function App() {
     cursor: 'pointer',
   };
 
-  if (!role) {
-    return (
-      <div style={{ textAlign: 'center', paddingTop: '50px' }}>
-        <h1>Se connecter</h1>
-        <button onClick={() => handleChooseRole('eleve')} style={btnStyle}>Élève</button>
-        <button onClick={() => handleChooseRole('prof')} style={btnStyle}>Professeur</button>
-      </div>
-    );
-  }
-
-  if (isLoggedIn && role === 'prof') {
-    // Si c'est un professeur connecté
+  if (loggedIn) {
     return (
       <div style={{ padding: '20px' }}>
-        <h2>Espace Professeur</h2>
-        <button onClick={handleRetour} style={{ ...btnStyle, backgroundColor: "#eee" }}>Déconnexion</button>
+        <h2>Espace {role === 'prof' ? 'Professeur' : 'Élève'}</h2>
+        <button onClick={handleLogout} style={{ ...btnStyle, backgroundColor: "#eee" }}>Déconnexion</button>
+
         <div>
-          <h3>Liste des notes des élèves</h3>
+          <h3>Liste des notes</h3>
           {notes.length > 0 ? (
-            notes.map(note => (
-              <div key={note.id}>
-                <p>Élève : {note.nom} — Note : {note.valeur}</p>
+            notes.map((note, index) => (
+              <div key={index}>
+                {role === 'prof' && (
+                  <p><strong>Élève :</strong> {note.eleve}</p>
+                )}
+                <p><strong>Matière :</strong> {note.matiere} — <strong>Note :</strong> {note.note}</p>
               </div>
             ))
           ) : (
@@ -94,43 +97,35 @@ function App() {
     );
   }
 
-  if (isLoggedIn && role === 'eleve') {
-    // Si c'est un élève connecté
-    return (
-      <div style={{ padding: '20px' }}>
-        <h2>Espace Élève</h2>
-        <button onClick={handleRetour} style={{ ...btnStyle, backgroundColor: "#eee" }}>Déconnexion</button>
-        <div>
-          {/* Affiche les notes de l'élève ici */}
-          <p>Voici vos notes :</p>
-          {/* On peut afficher les notes de l'élève si tu les récupères également dans une autre requête */}
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div style={{ padding: '20px' }}>
-      <h2>Connexion en tant que {role}</h2>
-      <input
-        type="text"
-        placeholder="Identifiant"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-        style={{ padding: '10px', marginBottom: '10px', width: '200px' }}
-      />
-      <br />
-      <input
-        type="password"
-        placeholder="Mot de passe"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        style={{ padding: '10px', marginBottom: '10px', width: '200px' }}
-      />
-      <br />
-      <button onClick={handleConnexion} style={btnStyle}>Se connecter</button>
-      <br />
-      <button onClick={handleRetour} style={{ ...btnStyle, backgroundColor: "#eee" }}>Retour</button>
+    <div style={{ textAlign: 'center', paddingTop: '50px' }}>
+      <h1>Se connecter</h1>
+      <button onClick={() => setRole('prof')} style={btnStyle}>Professeur</button>
+      <button onClick={() => setRole('eleve')} style={btnStyle}>Élève</button>
+
+      {role && (
+        <div style={{ marginTop: '20px' }}>
+          <h3>Connexion {role === 'prof' ? 'Professeur' : 'Élève'}</h3>
+          <input
+            type="text"
+            placeholder="Identifiant"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            style={{ padding: '5px', margin: '5px' }}
+          />
+          <input
+            type="password"
+            placeholder="Mot de passe"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            style={{ padding: '5px', margin: '5px' }}
+          />
+          <button onClick={handleLogin} style={{ ...btnStyle, backgroundColor: "#4CAF50", color: 'white' }}>
+            Valider
+          </button>
+          {error && <p style={{ color: 'red' }}>{error}</p>}
+        </div>
+      )}
     </div>
   );
 }
