@@ -4,6 +4,7 @@ function App() {
   const [role, setRole] = useState(null); 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [notes, setNotes] = useState([]); // Ajouté pour éviter une erreur si on appelle setNotes
 
   const handleChooseRole = (choix) => {
@@ -42,6 +43,7 @@ function App() {
     setRole(null);
     setUsername("");
     setPassword("");
+    setIsLoggedIn(false);
   };
 
   useEffect(() => {
@@ -51,7 +53,7 @@ function App() {
         .then(data => setNotes(data))
         .catch(err => console.error("Erreur de récupération des notes :", err));
     }
-  }, [role]);
+  }, [role, isLoggedIn]);
 
   const btnStyle = {
     margin: '10px',
@@ -66,6 +68,43 @@ function App() {
         <h1>Se connecter</h1>
         <button onClick={() => handleChooseRole('eleve')} style={btnStyle}>Élève</button>
         <button onClick={() => handleChooseRole('prof')} style={btnStyle}>Professeur</button>
+      </div>
+    );
+  }
+
+  if (isLoggedIn && role === 'prof') {
+    // Si c'est un professeur connecté
+    return (
+      <div style={{ padding: '20px' }}>
+        <h2>Espace Professeur</h2>
+        <button onClick={handleRetour} style={{ ...btnStyle, backgroundColor: "#eee" }}>Déconnexion</button>
+        <div>
+          <h3>Liste des notes des élèves</h3>
+          {notes.length > 0 ? (
+            notes.map(note => (
+              <div key={note.id}>
+                <p>Élève : {note.nom} — Note : {note.valeur}</p>
+              </div>
+            ))
+          ) : (
+            <p>Aucune note à afficher.</p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoggedIn && role === 'eleve') {
+    // Si c'est un élève connecté
+    return (
+      <div style={{ padding: '20px' }}>
+        <h2>Espace Élève</h2>
+        <button onClick={handleRetour} style={{ ...btnStyle, backgroundColor: "#eee" }}>Déconnexion</button>
+        <div>
+          {/* Affiche les notes de l'élève ici */}
+          <p>Voici vos notes :</p>
+          {/* On peut afficher les notes de l'élève si tu les récupères également dans une autre requête */}
+        </div>
       </div>
     );
   }
